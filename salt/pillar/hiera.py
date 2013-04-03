@@ -1,6 +1,6 @@
 '''
 Take in a hiera configuration file location and execute it.
-Adds the hiera data to pillar
+Adds the specified hiera data to pillar
 '''
 
 # Import python libs
@@ -25,16 +25,19 @@ def __virtual__():
     return 'hiera' if salt.utils.which('hiera') else False
 
 
-def ext_pillar(pillar, conf):
+def ext_pillar(pillar, config='/etc/hiera.yaml', items=None):
     '''
     Execute hiera and return the data
     '''
-    cmd = 'hiera {0}'.format(conf)
+    data = {}
+    cmd = 'hiera -c {0}'.format(config)
     for key, val in __grains__.items():
         if isinstance(val, string_types):
             cmd += ' {0}={1}'.format(key, val)
     try:
-        data = yaml.safe_load(__salt__['cmd.run'](cmd))
+        for item in items:
+            _cmd = '{0} {1}'.format(cmd, item)
+            data.update(yaml.safe_load(__salt__['cmd.run'](_cmd)))
     except Exception:
         log.critical(
                 'Hiera yaml data failed to parse from conf {0}'.format(conf)

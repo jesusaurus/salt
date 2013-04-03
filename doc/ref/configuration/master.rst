@@ -526,8 +526,12 @@ Default:: ``None``
 .. code-block:: yaml
 
     ext_pillar:
-      - hiera: /etc/hiera.yaml
       - cmd_yaml: cat /etc/salt/yaml
+      - hiera:
+        config: /etc/hiera.yaml
+        items:
+          - key1
+          - key2
 
 There are additional details at :ref:`salt-pillars`
 
