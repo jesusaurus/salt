@@ -221,23 +221,24 @@ def refresh_db():
         salt '*' pkg.refresh_db
     '''
     ret = {}
-    cmd = 'apt-get -q update'
-    out = __salt__['cmd.run_all'](cmd).get('stdout', '')
+    if not __opts__['test']:
+        cmd = 'apt-get -q update'
+        out = __salt__['cmd.run_all'](cmd).get('stdout', '')
 
-    lines = out.splitlines()
-    for line in lines:
-        cols = line.split()
-        if not cols:
-            continue
-        ident = ' '.join(cols[1:])
-        if 'Get' in cols[0]:
-            # Strip filesize from end of line
-            ident = re.sub(r' \[.+B\]$', '', ident)
-            ret[ident] = True
-        elif cols[0] == 'Ign':
-            ret[ident] = False
-        elif cols[0] == 'Hit':
-            ret[ident] = None
+        lines = out.splitlines()
+        for line in lines:
+            cols = line.split()
+            if not cols:
+                continue
+            ident = ' '.join(cols[1:])
+            if 'Get' in cols[0]:
+                # Strip filesize from end of line
+                ident = re.sub(r' \[.+B\]$', '', ident)
+                ret[ident] = True
+            elif cols[0] == 'Ign':
+                ret[ident] = False
+            elif cols[0] == 'Hit':
+                ret[ident] = None
     return ret
 
 
@@ -384,11 +385,14 @@ def install(name=None,
                   pkg=' '.join(targets),
               )
 
-    __salt__['cmd.run_all'](cmd)
-    __context__.pop('pkg.list_pkgs', None)
-    new = list_pkgs()
-    return __salt__['pkg_resource.find_changes'](old, new)
+    if not __opts__['test']:
+        __salt__['cmd.run_all'](cmd)
+        __context__.pop('pkg.list_pkgs', None)
+        new = list_pkgs()
+    else:  # assume everything goes swimmingly
+        new = old.extend(targets)
 
+    return __salt__['pkg_resource.find_changes'](old, new)
 
 def _uninstall(action='remove', name=None, pkgs=None, **kwargs):
     '''
@@ -410,10 +414,15 @@ def _uninstall(action='remove', name=None, pkgs=None, **kwargs):
     if not targets:
         return {}
     cmd = 'apt-get -q -y {0} {1}'.format(action, ' '.join(targets))
-    __salt__['cmd.run_all'](cmd)
-    __context__.pop('pkg.list_pkgs', None)
-    new = list_pkgs()
-    new_removed = list_pkgs(removed=True)
+
+    if not __opts__['test']:
+        __salt__['cmd.run_all'](cmd)
+        __context__.pop('pkg.list_pkgs', None)
+        new = list_pkgs()
+        new_removed = list_pkgs(removed=True)
+    else:
+        new = old - targets
+        new_removed = old - targets
 
     ret = {'installed': __salt__['pkg_resource.find_changes'](old, new)}
     if action == 'purge':
@@ -506,9 +515,12 @@ def upgrade(refresh=True, **kwargs):
     old = list_pkgs()
     cmd = ('apt-get -q -y -o DPkg::Options::=--force-confold '
            '-o DPkg::Options::=--force-confdef dist-upgrade')
-    __salt__['cmd.run_all'](cmd)
-    __context__.pop('pkg.list_pkgs', None)
-    new = list_pkgs()
+    if not __opts__['test']:
+        __salt__['cmd.run_all'](cmd)
+        __context__.pop('pkg.list_pkgs', None)
+        new = list_pkgs()
+    else
+        new = _get_upgradable()
     return __salt__['pkg_resource.find_changes'](old, new)
 
 
