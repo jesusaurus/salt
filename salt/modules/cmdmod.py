@@ -575,13 +575,12 @@ def run(cmd,
     lvl = _check_loglevel(output_loglevel, quiet)
     if lvl is not None:
         if ret['retcode'] != 0:
-            if lvl < LOG_LEVELS['error']:
-                lvl = LOG_LEVELS['error']
-            log.error(
+            log.log(lvl,
                 'Command {0!r} failed with return code: {1}'
                 .format(cmd, ret['retcode'])
             )
-        log.log(lvl, 'output: {0}'.format(ret['stdout']))
+        if ret['stdout']:
+            log.log(lvl, 'output: {0}'.format(ret['stdout']))
     return ret['stdout']
 
 
@@ -650,9 +649,7 @@ def run_stdout(cmd,
     lvl = _check_loglevel(output_loglevel, quiet)
     if lvl is not None:
         if ret['retcode'] != 0:
-            if lvl < LOG_LEVELS['error']:
-                lvl = LOG_LEVELS['error']
-            log.error(
+            log.log(lvl,
                 'Command {0!r} failed with return code: {1}'
                 .format(cmd, ret['retcode'])
             )
@@ -728,9 +725,7 @@ def run_stderr(cmd,
     lvl = _check_loglevel(output_loglevel, quiet)
     if lvl is not None:
         if ret['retcode'] != 0:
-            if lvl < LOG_LEVELS['error']:
-                lvl = LOG_LEVELS['error']
-            log.error(
+            log.log(lvl,
                 'Command {0!r} failed with return code: {1}'
                 .format(cmd, ret['retcode'])
             )
@@ -806,9 +801,7 @@ def run_all(cmd,
     lvl = _check_loglevel(output_loglevel, quiet)
     if lvl is not None:
         if ret['retcode'] != 0:
-            if lvl < LOG_LEVELS['error']:
-                lvl = LOG_LEVELS['error']
-            log.error(
+            log.log(lvl,
                 'Command {0!r} failed with return code: {1}'
                 .format(cmd, ret['retcode'])
             )
@@ -883,13 +876,12 @@ def retcode(cmd,
     lvl = _check_loglevel(output_loglevel, quiet)
     if lvl is not None:
         if ret['retcode'] != 0:
-            if lvl < LOG_LEVELS['error']:
-                lvl = LOG_LEVELS['error']
-            log.error(
+            log.log(lvl,
                 'Command {0!r} failed with return code: {1}'
                 .format(cmd, ret['retcode'])
             )
-        log.log(lvl, 'output: {0}'.format(ret['stdout']))
+        if ret['stdout']:
+            log.log(lvl, 'output: {0}'.format(ret['stdout']))
     return ret['retcode']
 
 
